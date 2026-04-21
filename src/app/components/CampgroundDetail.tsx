@@ -4,16 +4,13 @@ import {
   ArrowLeft, 
   Edit, 
   MapPin, 
-  Wifi,
-  Zap,
-  ShowerHead,
-  Store,
-  Tent,
-  Users,
-  Star,
-  Upload,
-  Image as ImageIcon,
-  Loader2
+  Tent, 
+  Users, 
+  Star, 
+  Image as ImageIcon, 
+  Loader2,
+  BarChart3,
+  MessageSquare
 } from "lucide-react";
 
 // 서버 응답 데이터 타입 정의
@@ -41,13 +38,15 @@ export function CampgroundDetail() {
   const [data, setData] = useState<CampgroundDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // API 베이스 URL 설정
+  const API_BASE_URL = "http://localhost:8000";
+
   useEffect(() => {
     const fetchDetail = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:8000/campgrounds/${id}`);
+        const response = await fetch(`${API_BASE_URL}/campgrounds/${id}`);
         const result = await response.json();
-        // 배열로 올 경우 첫 번째 객체 선택, 객체로 올 경우 그대로 사용
         const detailData = Array.isArray(result) ? result[0] : result;
         setData(detailData);
       } catch (error) {
@@ -59,6 +58,24 @@ export function CampgroundDetail() {
 
     if (id) fetchDetail();
   }, [id]);
+
+  // 이미지 로드 에러 핸들러: 에러 발생 시 UI가 깨지지 않도록 안내 문구로 대체
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    target.onerror = null; 
+
+    const parent = target.parentElement;
+    if (parent) {
+      target.style.display = 'none'; 
+      const noDataBox = document.createElement('div');
+      noDataBox.className = "flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200 w-full";
+      noDataBox.innerHTML = `
+        <div class="text-gray-400 mb-2 font-medium">분석 데이터를 불러올 수 없습니다</div>
+        <div class="text-gray-300 text-sm">리뷰 데이터가 충분하지 않거나 서버 연결을 확인해주세요.</div>
+      `;
+      parent.appendChild(noDataBox);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -81,11 +98,13 @@ export function CampgroundDetail() {
       </button>
 
       <div className="grid grid-cols-3 gap-6">
-        {/* 메인 정보 섹션 (왼쪽) */}
-        <div className="col-span-2 space-y-6">
+        {/* 왼쪽 메인 콘텐츠 (2열 점유) */}
+        <div className="col-span-2 space-y-8">
+          
+          {/* 1. 기본 정보 카드 */}
           <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
-            <div className="flex justify-between items-start mb-8">
-              <div className="text-left">
+            <div className="flex justify-between items-start mb-8 text-left">
+              <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -98,26 +117,26 @@ export function CampgroundDetail() {
                   <MapPin className="w-4 h-4" /> {data.address}
                 </div>
               </div>
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all font-medium shadow-sm">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all font-medium">
                 <Edit className="w-4 h-4" /> 정보 수정
               </button>
             </div>
 
             {/* 가격 정보 그리드 */}
-            <div className="grid grid-cols-4 gap-4 py-8 border-t border-b border-gray-100 mb-8 bg-gray-50/50 rounded-lg px-4">
-              <div className="text-left">
+            <div className="grid grid-cols-4 gap-4 py-8 border-t border-b border-gray-100 mb-8 bg-gray-50/50 rounded-lg px-4 text-left">
+              <div>
                 <p className="text-xs text-gray-500 mb-1">평일 비수기</p>
                 <p className="text-lg font-bold text-gray-900">₩{data.price_off_weekday.toLocaleString()}</p>
               </div>
-              <div className="text-left border-l pl-4 border-gray-200">
+              <div className="border-l pl-4 border-gray-200">
                 <p className="text-xs text-gray-500 mb-1">주말 비수기</p>
                 <p className="text-lg font-bold text-teal-600">₩{data.price_off_weekend.toLocaleString()}</p>
               </div>
-              <div className="text-left border-l pl-4 border-gray-200">
+              <div className="border-l pl-4 border-gray-200">
                 <p className="text-xs text-gray-500 mb-1">평일 성수기</p>
                 <p className="text-lg font-bold text-gray-900">₩{data.price_peak_weekday.toLocaleString()}</p>
               </div>
-              <div className="text-left border-l pl-4 border-gray-200">
+              <div className="border-l pl-4 border-gray-200">
                 <p className="text-xs text-gray-500 mb-1">주말 성수기</p>
                 <p className="text-lg font-bold text-rose-500">₩{data.price_peak_weekend.toLocaleString()}</p>
               </div>
@@ -131,7 +150,65 @@ export function CampgroundDetail() {
             </div>
           </div>
 
-          {/* 편의 시설 섹션 */}
+          {/* 2. 실시간 방문 분석 (한 칸에 하나씩 크게 배치) */}
+          <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
+            <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2 border-b pb-4">
+              <BarChart3 className="w-5 h-5 text-teal-600" /> 실시간 방문 분석
+            </h2>
+            <div className="flex flex-col gap-12">
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-gray-600 bg-gray-100 py-1.5 px-4 rounded-full w-fit">월별 방문 추이</p>
+                <div className="w-full border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white">
+                  <img 
+                    src={`${API_BASE_URL}/campgrounds/${id}/line`} 
+                    alt="월별 방문 추이" 
+                    className="w-full h-auto block"
+                    onError={handleImageError}
+                  />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <p className="text-sm font-semibold text-gray-600 bg-gray-100 py-1.5 px-4 rounded-full w-fit">연도별 방문 비중</p>
+                <div className="w-full border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white flex justify-center">
+                  <img 
+                    src={`${API_BASE_URL}/campgrounds/${id}/pie`} 
+                    alt="연도별 방문 비중" 
+                    className="w-full max-w-[900px] h-auto block"
+                    onError={handleImageError}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. 리뷰 키워드 트렌드 (한 칸에 하나씩 크게 배치) */}
+          <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
+            <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2 border-b pb-4">
+              <MessageSquare className="w-5 h-5 text-teal-600" /> 리뷰 키워드 트렌드
+            </h2>
+            <div className="flex flex-col gap-10">
+              <div className="bg-emerald-50/30 p-8 rounded-2xl border border-emerald-100">
+                <p className="text-md font-bold text-emerald-700 mb-6 text-center">긍정 키워드 TOP</p>
+                <img 
+                  src={`${API_BASE_URL}/campgrounds/${id}/dashboard/positive`} 
+                  alt="긍정 키워드 분석" 
+                  className="w-full h-auto mix-blend-multiply" 
+                  onError={handleImageError}
+                />
+              </div>
+              <div className="bg-rose-50/30 p-8 rounded-2xl border border-rose-100">
+                <p className="text-md font-bold text-rose-700 mb-6 text-center">부정 키워드 TOP</p>
+                <img 
+                  src={`${API_BASE_URL}/campgrounds/${id}/dashboard/negative`} 
+                  alt="부정 키워드 분석" 
+                  className="w-full h-auto mix-blend-multiply" 
+                  onError={handleImageError}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 4. 보유 시설 */}
           <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
             <h2 className="text-lg font-bold text-gray-900 mb-6">보유 시설</h2>
             <div className="flex flex-wrap gap-2">
@@ -145,7 +222,7 @@ export function CampgroundDetail() {
           </div>
         </div>
 
-        {/* 요약 정보 섹션 (오른쪽) */}
+        {/* 오른쪽 사이드바 (1열 점유) */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm text-left">
             <h2 className="text-base font-bold text-gray-900 mb-5 pb-3 border-b">운영 상세 정보</h2>
@@ -164,12 +241,11 @@ export function CampgroundDetail() {
               </div>
               <div className="flex items-center justify-between text-sm pt-2 border-t">
                 <span className="text-gray-500">주변 환경</span>
-                <span className="text-gray-900 text-xs">{data.surroundings}</span>
+                <span className="text-gray-900 text-xs text-right font-medium">{data.surroundings}</span>
               </div>
             </div>
           </div>
           
-          {/* 이미지/지도 업로드 (디자인 유지) */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm text-left">
             <h2 className="text-base font-bold text-gray-900 mb-4">이미지 관리</h2>
             <div className="border-2 border-dashed border-gray-100 rounded-xl p-8 text-center hover:border-teal-300 hover:bg-teal-50 transition-all cursor-pointer group">

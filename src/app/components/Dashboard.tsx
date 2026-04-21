@@ -1,63 +1,57 @@
+import { useEffect, useState } from "react";
 import { Tent, DollarSign, Star, Users } from "lucide-react";
 import { KPICard } from "./KPICard";
 import { RegionalOverview } from "./RegionalOverview";
 
+interface DashboardData {
+  total_count: number;
+  avg_price: number;
+  total_reviews: number;
+}
+
 export function Dashboard() {
+  const [stats, setStats] = useState<DashboardData>({ total_count: 0, avg_price: 0, total_reviews: 0 });
+
+  useEffect(() => {
+    fetch("http://localhost:8000/main/stats/summary")
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.error("KPI 로드 실패", err));
+  }, []);
+
   return (
-    <div className="p-6 max-w-[1440px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          캠핑장 데이터 분석 대시보드
-        </h1>
-        <p className="text-sm text-gray-600">
-          전국 캠핑장 운영 현황, 가격, 평점, 방문 데이터를 한눈에 확인하세요
-        </p>
+    // max-w-full을 사용하여 화면 좌우를 가득 채웁니다.
+    <div className="p-6 w-full max-w-full mx-auto space-y-6 bg-gray-50 min-h-screen">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">캠핑장 데이터 분석 대시보드</h1>
+        <p className="text-sm text-gray-600">전국 캠핑장 운영 현황 및 방문 데이터를 실시간으로 확인하세요</p>
       </div>
 
-      <div className="mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          <KPICard
-            title="총 캠핑장 수"
-            value="1,239"
-            change={5.2}
-            icon={Tent}
-            description="지난 달 대비"
-          />
-          <KPICard
-            title="평균 가격"
-            value="₩47,500"
-            change={2.8}
-            icon={DollarSign}
-            description="지난 달 대비"
-          />
-          <KPICard
-            title="평균 평점"
-            value="4.3"
-            change={1.5}
-            icon={Star}
-            description="지난 달 대비"
-          />
-          <KPICard
-            title="총 방문 수"
-            value="52,600"
-            change={8.4}
-            icon={Users}
-            description="지난 달 대비"
-          />
-        </div>
+      {/* 상단 KPI 영역: 불필요한 속성 제거 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <KPICard 
+          title="총 캠핑장 수" 
+          value={stats.total_count.toLocaleString()} 
+          icon={Tent} 
+        />
+        <KPICard 
+          title="평균 가격" 
+          value={`₩${stats.avg_price.toLocaleString()}`} 
+          icon={DollarSign} 
+        />
+        <KPICard 
+          title="총 방문 수" 
+          value={stats.total_reviews.toLocaleString()} 
+          icon={Users} 
+        />
+        <KPICard 
+          title="평균 평점" 
+          value="4.3" 
+          icon={Star} 
+        />
       </div>
 
-      <div className="mb-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            지역별 현황 및 방문 추이
-          </h2>
-          <p className="text-sm text-gray-600">
-            전국 캠핑장 지역 분포 및 최근 방문 트렌드
-          </p>
-        </div>
-        <RegionalOverview />
-      </div>
+      <RegionalOverview />
     </div>
   );
 }

@@ -3,13 +3,14 @@ import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 interface KPICardProps {
   title: string;
   value: string;
-  change: number;
   icon: LucideIcon;
-  description: string;
+  change?: number;      // ? 추가: 선택적 속성으로 변경
+  description?: string; // ? 추가: 선택적 속성으로 변경
 }
 
 export function KPICard({ title, value, change, icon: Icon, description }: KPICardProps) {
-  const isPositive = change >= 0;
+  // change 값이 있을 때만 증감 여부 판단
+  const isPositive = change !== undefined ? change >= 0 : null;
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
@@ -23,19 +24,24 @@ export function KPICard({ title, value, change, icon: Icon, description }: KPICa
         </div>
       </div>
       
-      <div className="flex items-center gap-2">
-        <div className={`flex items-center gap-1 text-sm font-medium ${
-          isPositive ? "text-emerald-600" : "text-red-600"
-        }`}>
-          {isPositive ? (
-            <TrendingUp className="w-4 h-4" />
-          ) : (
-            <TrendingDown className="w-4 h-4" />
+      {/* change나 description이 있을 때만 하단 바를 렌더링 */}
+      {(change !== undefined || description) && (
+        <div className="flex items-center gap-2 mt-2">
+          {change !== undefined && (
+            <div className={`flex items-center gap-1 text-sm font-medium ${
+              isPositive ? "text-emerald-600" : "text-red-600"
+            }`}>
+              {isPositive ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )}
+              <span>{isPositive ? "+" : ""}{change}%</span>
+            </div>
           )}
-          <span>{isPositive ? "+" : ""}{change}%</span>
+          {description && <span className="text-sm text-gray-500">{description}</span>}
         </div>
-        <span className="text-sm text-gray-500">{description}</span>
-      </div>
+      )}
     </div>
   );
 }
