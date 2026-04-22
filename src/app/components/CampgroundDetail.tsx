@@ -13,7 +13,6 @@ import {
   MessageSquare
 } from "lucide-react";
 
-// 서버 응답 데이터 타입 정의
 interface CampgroundDetailData {
   camspot_id: number;
   name: string;
@@ -37,8 +36,15 @@ export function CampgroundDetail() {
   
   const [data, setData] = useState<CampgroundDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 이미지 에러 상태 관리
+  const [imgError, setImgError] = useState({
+    line: false,
+    pie: false,
+    positive: false,
+    negative: false
+  });
 
-  // API 베이스 URL 설정
   const API_BASE_URL = "http://localhost:8000";
 
   useEffect(() => {
@@ -59,22 +65,9 @@ export function CampgroundDetail() {
     if (id) fetchDetail();
   }, [id]);
 
-  // 이미지 로드 에러 핸들러: 에러 발생 시 UI가 깨지지 않도록 안내 문구로 대체
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const target = e.currentTarget;
-    target.onerror = null; 
-
-    const parent = target.parentElement;
-    if (parent) {
-      target.style.display = 'none'; 
-      const noDataBox = document.createElement('div');
-      noDataBox.className = "flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200 w-full";
-      noDataBox.innerHTML = `
-        <div class="text-gray-400 mb-2 font-medium">분석 데이터를 불러올 수 없습니다</div>
-        <div class="text-gray-300 text-sm">리뷰 데이터가 충분하지 않거나 서버 연결을 확인해주세요.</div>
-      `;
-      parent.appendChild(noDataBox);
-    }
+  // 에러 발생 시 해당 키의 상태를 true로 변경
+  const handleImageError = (key: keyof typeof imgError) => {
+    setImgError(prev => ({ ...prev, [key]: true }));
   };
 
   if (isLoading) {
@@ -87,9 +80,12 @@ export function CampgroundDetail() {
 
   if (!data) return <div className="p-10 text-center text-gray-500">정보를 찾을 수 없습니다.</div>;
 
+  // 방문 분석 섹션(Line, Pie 둘 다 없을 때)과 리뷰 섹션(Pos, Neg 둘 다 없을 때)의 표시 여부 계산
+  const showVisitAnalysis = !imgError.line || !imgError.pie;
+  const showReviewTrend = !imgError.positive || !imgError.negative;
+
   return (
     <div className="p-6 max-w-[1200px] mx-auto bg-gray-50 min-h-screen">
-      {/* 상단 네비게이션 */}
       <button 
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium"
@@ -98,10 +94,9 @@ export function CampgroundDetail() {
       </button>
 
       <div className="grid grid-cols-3 gap-6">
-        {/* 왼쪽 메인 콘텐츠 (2열 점유) */}
         <div className="col-span-2 space-y-8">
           
-          {/* 1. 기본 정보 카드 */}
+          {/* 1. 기본 정보 카드 (생략 없음) */}
           <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
             <div className="flex justify-between items-start mb-8 text-left">
               <div>
@@ -122,7 +117,6 @@ export function CampgroundDetail() {
               </button>
             </div>
 
-            {/* 가격 정보 그리드 */}
             <div className="grid grid-cols-4 gap-4 py-8 border-t border-b border-gray-100 mb-8 bg-gray-50/50 rounded-lg px-4 text-left">
               <div>
                 <p className="text-xs text-gray-500 mb-1">평일 비수기</p>
@@ -150,63 +144,75 @@ export function CampgroundDetail() {
             </div>
           </div>
 
-          {/* 2. 실시간 방문 분석 (한 칸에 하나씩 크게 배치) */}
-          <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
-            <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2 border-b pb-4">
-              <BarChart3 className="w-5 h-5 text-teal-600" /> 실시간 방문 분석
-            </h2>
-            <div className="flex flex-col gap-12">
-              <div className="space-y-4">
-                <p className="text-sm font-semibold text-gray-600 bg-gray-100 py-1.5 px-4 rounded-full w-fit">월별 방문 추이</p>
-                <div className="w-full border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white">
-                  <img 
-                    src={`${API_BASE_URL}/campgrounds/${id}/line`} 
-                    alt="월별 방문 추이" 
-                    className="w-full h-auto block"
-                    onError={handleImageError}
-                  />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <p className="text-sm font-semibold text-gray-600 bg-gray-100 py-1.5 px-4 rounded-full w-fit">연도별 방문 비중</p>
-                <div className="w-full border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white flex justify-center">
-                  <img 
-                    src={`${API_BASE_URL}/campgrounds/${id}/pie`} 
-                    alt="연도별 방문 비중" 
-                    className="w-full max-w-[900px] h-auto block"
-                    onError={handleImageError}
-                  />
-                </div>
+          {/* 2. 실시간 방문 분석 (이미지가 하나라도 있을 때만 노출) */}
+          {showVisitAnalysis && (
+            <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
+              <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2 border-b pb-4">
+                <BarChart3 className="w-5 h-5 text-teal-600" /> 실시간 방문 분석
+              </h2>
+              <div className="flex flex-col gap-12">
+                {!imgError.line && (
+                  <div className="space-y-4">
+                    <p className="text-sm font-semibold text-gray-600 bg-gray-100 py-1.5 px-4 rounded-full w-fit">월별 방문 추이</p>
+                    <div className="w-full border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white">
+                      <img 
+                        src={`${API_BASE_URL}/campgrounds/${id}/line`} 
+                        alt="월별 방문 추이" 
+                        className="w-full h-auto block"
+                        onError={() => handleImageError('line')}
+                      />
+                    </div>
+                  </div>
+                )}
+                {!imgError.pie && (
+                  <div className="space-y-4">
+                    <p className="text-sm font-semibold text-gray-600 bg-gray-100 py-1.5 px-4 rounded-full w-fit">연도별 방문 비중</p>
+                    <div className="w-full border border-gray-100 rounded-xl overflow-hidden shadow-sm bg-white flex justify-center">
+                      <img 
+                        src={`${API_BASE_URL}/campgrounds/${id}/pie`} 
+                        alt="연도별 방문 비중" 
+                        className="w-full max-w-[900px] h-auto block"
+                        onError={() => handleImageError('pie')}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 3. 리뷰 키워드 트렌드 (한 칸에 하나씩 크게 배치) */}
-          <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
-            <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2 border-b pb-4">
-              <MessageSquare className="w-5 h-5 text-teal-600" /> 리뷰 키워드 트렌드
-            </h2>
-            <div className="flex flex-col gap-10">
-              <div className="bg-emerald-50/30 p-8 rounded-2xl border border-emerald-100">
-                <p className="text-md font-bold text-emerald-700 mb-6 text-center">긍정 키워드 TOP</p>
-                <img 
-                  src={`${API_BASE_URL}/campgrounds/${id}/dashboard/positive`} 
-                  alt="긍정 키워드 분석" 
-                  className="w-full h-auto mix-blend-multiply" 
-                  onError={handleImageError}
-                />
-              </div>
-              <div className="bg-rose-50/30 p-8 rounded-2xl border border-rose-100">
-                <p className="text-md font-bold text-rose-700 mb-6 text-center">부정 키워드 TOP</p>
-                <img 
-                  src={`${API_BASE_URL}/campgrounds/${id}/dashboard/negative`} 
-                  alt="부정 키워드 분석" 
-                  className="w-full h-auto mix-blend-multiply" 
-                  onError={handleImageError}
-                />
+          {/* 3. 리뷰 키워드 트렌드 (키워드 이미지가 하나라도 있을 때만 노출) */}
+          {showReviewTrend && (
+            <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
+              <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2 border-b pb-4">
+                <MessageSquare className="w-5 h-5 text-teal-600" /> 리뷰 키워드 트렌드
+              </h2>
+              <div className="flex flex-col gap-10">
+                {!imgError.positive && (
+                  <div className="bg-emerald-50/30 p-8 rounded-2xl border border-emerald-100">
+                    <p className="text-md font-bold text-emerald-700 mb-6 text-center">긍정 키워드 TOP</p>
+                    <img 
+                      src={`${API_BASE_URL}/campgrounds/${id}/dashboard/positive`} 
+                      alt="긍정 키워드 분석" 
+                      className="w-full h-auto mix-blend-multiply" 
+                      onError={() => handleImageError('positive')}
+                    />
+                  </div>
+                )}
+                {!imgError.negative && (
+                  <div className="bg-rose-50/30 p-8 rounded-2xl border border-rose-100">
+                    <p className="text-md font-bold text-rose-700 mb-6 text-center">부정 키워드 TOP</p>
+                    <img 
+                      src={`${API_BASE_URL}/campgrounds/${id}/dashboard/negative`} 
+                      alt="부정 키워드 분석" 
+                      className="w-full h-auto mix-blend-multiply" 
+                      onError={() => handleImageError('negative')}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* 4. 보유 시설 */}
           <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-left">
@@ -222,7 +228,7 @@ export function CampgroundDetail() {
           </div>
         </div>
 
-        {/* 오른쪽 사이드바 (1열 점유) */}
+        {/* 오른쪽 사이드바 생략 */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm text-left">
             <h2 className="text-base font-bold text-gray-900 mb-5 pb-3 border-b">운영 상세 정보</h2>

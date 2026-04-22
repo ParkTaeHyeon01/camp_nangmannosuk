@@ -14,8 +14,6 @@ import {
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { id: "campground", label: "Campground Management", icon: Tent, path: "/campground" },
-  { id: "statistics", label: "Statistics Analysis", icon: BarChart3, path: "/statistics" },
-  { id: "forecast", label: "Forecast Analysis", icon: TrendingUp, path: "/forecast" },
   { id: "review", label: "Review Management", icon: MessageSquare, path: "/review" },
 ];
 
