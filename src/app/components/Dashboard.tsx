@@ -102,16 +102,13 @@ export function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">캠핑장 데이터 분석 대시보드</h1>
           <p className="text-sm text-gray-600">전국 캠핑장 운영 현황 및 방문 데이터를 실시간으로 확인하세요</p>
         </div>
-        <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2 shadow-sm">
-          <Download className="w-4 h-4" /> 리포트 다운로드
-        </button>
       </div>
 
       {/* 1. KPI 카드 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         <KPICard title="총 캠핑장 수" value={stats.total_count.toLocaleString()} icon={Tent} />
         <KPICard title="평균 가격" value={`₩${stats.avg_price.toLocaleString()}`} icon={DollarSign} />
-        <KPICard title="총 방문 수" value={stats.total_reviews.toLocaleString()} icon={Users} />
+        <KPICard title="총 리뷰 수" value={stats.total_reviews.toLocaleString()} icon={Users} />
       </div>
 
       {/* 2. 상세 통계 차트 영역 */}

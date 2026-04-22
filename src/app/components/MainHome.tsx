@@ -25,13 +25,6 @@ const featureCards = [
     tone: "blue",
   },
   {
-    title: "미래 수요 및 혼잡도 예측",
-    description:
-      "예상 방문량과 혼잡도를 기반으로 향후 운영 대응과 자원 계획 수립을 지원합니다.",
-    icon: TrendingUp,
-    tone: "emerald",
-  },
-  {
     title: "리뷰 기반 운영 인사이트 확인",
     description:
       "리뷰 데이터를 통해 이용자 반응과 운영 개선 포인트를 직관적으로 확인할 수 있습니다.",
@@ -112,7 +105,7 @@ function MiniInfoCard({
 
 export function MainHome() {
   return (
-    <div className="mx-auto max-w-[1440px] p-6">
+    <div className="mx-auto max-w-[1440px] p-6 mt-15">
       <div className="space-y-8">
         {/* 상단 소개 카드 */}
         <section className="relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm">
@@ -126,7 +119,7 @@ export function MainHome() {
               </div>
 
               <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-gray-900 xl:text-[40px] xl:leading-[1.15]">
-                낭만 노숙 관리자 시스템
+                낭만 노숙 캠핑장 운영 분석 대시보드
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-gray-600 xl:text-base">
@@ -187,7 +180,7 @@ export function MainHome() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
             {featureCards.map((card) => (
               <FeatureCard
                 key={card.title}
@@ -206,7 +199,7 @@ export function MainHome() {
             좌측 메뉴에서 원하는 기능을 선택하세요.
           </p>
           <p className="mt-1 text-sm leading-6 text-gray-500">
-            Dashboard, 캠핑장 관리, 통계 분석, 예측 분석, 리뷰 관리 메뉴를 통해
+            Dashboard, 캠핑장 조회, 리뷰 분석 메뉴를 통해
             각 업무 화면으로 이동할 수 있습니다.
           </p>
         </section>

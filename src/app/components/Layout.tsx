@@ -1,10 +1,10 @@
 //import { Outlet, Link, useLocation } from "react-router";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Tent, 
-  BarChart3, 
-  TrendingUp, 
+import {
+  LayoutDashboard,
+  Tent,
+  BarChart3,
+  TrendingUp,
   MessageSquare,
   Bell,
   Search,
@@ -25,16 +25,16 @@ export function Layout() {
       {/* Fixed Left Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
 
-        
+
         {/* Brand */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
-  <Link to="/" className="flex items-center gap-2">
-    <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg flex items-center justify-center">
-      <Tent className="w-5 h-5 text-white" />
-    </div>
-    <span className="font-semibold text-gray-900">낭만 노숙</span>
-  </Link>
-</div>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg flex items-center justify-center">
+              <Tent className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-semibold text-gray-900">낭만 노숙</span>
+          </Link>
+        </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4">
@@ -42,16 +42,15 @@ export function Layout() {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
-              
+
               return (
                 <li key={item.id}>
                   <Link
                     to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      isActive
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive
                         ? "bg-teal-50 text-teal-700 font-medium"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span>{item.label}</span>
@@ -78,31 +77,6 @@ export function Layout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Utility Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative max-w-md w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="relative p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div className="w-px h-6 bg-gray-200"></div>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">2026.04.16</span>
-            </div>
-          </div>
-        </header>
-
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <Outlet />
