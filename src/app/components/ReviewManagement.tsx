@@ -24,6 +24,18 @@ import {
   Legend,
 } from "recharts";
 
+// --- [수정 포인트 1: React Hook 임포트 추가] ---
+import { useState, useEffect } from "react";
+
+// --- [수정 포인트 2: TypeScript 타입 정의] ---
+interface RegionSentiment {
+  region: string;
+  positive: number;
+  negative: number;
+}
+
+
+
 // 캠핑장별 긍정/부정 데이터
 const campgroundSentimentData = [
   { campground: "난지", positive: 85, negative: 15 },
@@ -196,7 +208,29 @@ function WordCloud({
   );
 }
 
+
 export function ReviewManagement() {
+  // --- [수정 포인트 3: 제네릭을 이용한 상태 타입 지정] ---
+  const [regionSentimentData, setRegionSentimentData] = useState<RegionSentiment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSentimentData = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/stats/regions/sentiment");
+        if (!response.ok) throw new Error("Network response was not ok");
+        const data = await response.json();
+        setRegionSentimentData(data);
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSentimentData();
+  }, []);
+
   return (
     <div className="mx-auto max-w-[1440px] p-6">
       <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -289,40 +323,32 @@ export function ReviewManagement() {
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  캠핑장별 긍정/부정 리뷰
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  캠핑장별 감성 비교 막대그래프
-                </p>
+                <h2 className="text-lg font-semibold text-gray-900">지역별 긍정/부정 리뷰</h2>
+                <p className="mt-1 text-sm text-gray-500">실시간 지역별 감성 분석 데이터</p>
               </div>
               <ThumbsUp className="h-5 w-5 text-emerald-500" />
             </div>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={campgroundSentimentData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis
-                  dataKey="campground"
-                  tick={{ fontSize: 12, fill: "#6B7280" }}
-                />
-                <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="positive"
-                  name="긍정"
-                  fill="#10B981"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="negative"
-                  name="부정"
-                  fill="#EF4444"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-[300px] w-full">
+              {isLoading ? (
+                <div className="flex h-full items-center justify-center text-gray-500">
+                  데이터를 분석 중입니다...
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={regionSentimentData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                    {/* 5. dataKey를 'campground'에서 'region'으로 수정 */}
+                    <XAxis dataKey="region" tick={{ fontSize: 12, fill: "#6B7280" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="positive" name="긍정" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="negative" name="부정" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -572,9 +598,9 @@ export function ReviewManagement() {
                       <SentimentBadge
                         sentiment={
                           row.sentiment as
-                            | "positive"
-                            | "negative"
-                            | "neutral"
+                          | "positive"
+                          | "negative"
+                          | "neutral"
                         }
                       />
                     </td>
